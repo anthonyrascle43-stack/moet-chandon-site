@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Moët & Chandon — L’Art de la Célébration</title>
+
+  <!-- Fonts & Libs -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Inter:wght@300;400&display=swap" rel="stylesheet"/>
+  <link rel="preload" as="video" href="ad video.mp4" type="video/mp4">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{--text:#f0f0f0;--sub:#bdbdbd;--line:rgba(255,255,255,.12);--dim:rgba(0,0,0,.65)}
+    html{scroll-behavior:smooth}
+    body{background:#000;color:var(--text);font-family:'Inter',sans-serif;overflow-x:hidden}
+    h1,h2{font-family:'Playfair Display',serif;font-weight:400;letter-spacing:1px}
+
+    /* Video background */
+    .video-container{position:fixed;inset:0;overflow:hidden;z-index:-2}
+    .video-container video{width:100vw;height:100vh;object-fit:cover;filter:brightness(.55)}
+    .overlay{position:fixed;inset:0;background:radial-gradient(circle at center,rgba(0,0,0,.25),rgba(0,0,0,.85));z-index:-1}
+
+    /* Navbar */
+    nav{position:fixed;top:0;left:0;width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 28px;z-index:10;background:rgba(0,0,0,.1);backdrop-filter:blur(10px);transition:background .6s}
+    nav.scrolled{background:rgba(0,0,0,.55)}
+    .brand{font-family:'Playfair Display',serif;text-transform:uppercase;letter-spacing:2px;font-size:1.05rem}
+    .menu{display:flex;gap:26px}
+    .menu a{color:#e0e0e0;text-decoration:none;font-size:.95rem;letter-spacing:.8px;text-transform:uppercase;transition:color .3s}
+    .menu a:hover{color:#fff}
+
+    /* Custom language switcher */
+    .lang{position:relative}
+    .lang select{
+      appearance:none;-webkit-appearance:none;-moz-appearance:none;
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      color:#fff;border-radius:10px;padding:8px 36px 8px 12px;cursor:pointer;
+      font-size:.9rem;letter-spacing:.5px
+    }
+    .lang:after{
+      content:"▾";position:absolute;right:10px;top:50%;transform:translateY(-50%);
+      color:#ddd;pointer-events:none;font-size:.8rem
+    }
+
+    /* Hero */
+    .hero{height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:0 2rem}
+    .hero h1{font-size:3.2rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:.8rem;color:#fff}
+    .hero p{max-width:760px;color:#ccc;line-height:1.7}
+
+    /* Sections */
+    section{padding:140px 10%;text-align:center;position:relative;background:var(--dim);backdrop-filter:blur(4px)}
+    section h2{font-size:2rem;margin-bottom:28px;opacity:0;transform:translateY(60px)}
+    section p{max-width:880px;margin:0 auto;color:var(--sub);line-height:1.85;font-size:1.06rem;opacity:0;transform:translateY(60px)}
+
+    .divider{width:1px;height:120px;background:linear-gradient(to bottom,transparent,rgba(255,255,255,.2),transparent);margin:100px auto}
+
+    /* Gallery (background-image approach) */
+    .gallery{margin-top:40px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;justify-items:center}
+    .gallery figure{
+      position:relative;width:100%;aspect-ratio:4/3;border-radius:14px;border:1px solid var(--line);
+      background-color:#111;overflow:hidden;cursor:pointer;transition:transform .4s ease,box-shadow .4s ease;
+      background-repeat:no-repeat;background-position:center;background-size:cover;
+    }
+    /* Section-specific fit: bottles = contain */
+    #collection .gallery figure{aspect-ratio:4/5;background-size:contain;background-color:#000}
+
+    .gallery figure:hover{transform:scale(1.02);box-shadow:0 15px 40px rgba(0,0,0,.6)}
+    .gallery figure::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.6),transparent 60%);z-index:1}
+    .gallery figcaption{position:absolute;left:0;right:0;bottom:0;padding:10px 14px;color:#f1f1f1;font-size:.95rem;letter-spacing:.4px;text-align:left;z-index:2}
+
+    /* 3D scene (unchanged look) */
+    .scene{height:80vh;perspective:1000px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+    .bottle3d{width:min(420px,60vw);height:min(720px,80vh);background:radial-gradient(ellipse at 50% 30%,rgba(255,255,255,.12),rgba(255,255,255,.03) 40%,rgba(0,0,0,0) 41%),#101010;border:1px solid var(--line);border-radius:26px;box-shadow:0 30px 80px rgba(0,0,0,.6);transform-style:preserve-3d;transform:rotateY(-12deg) rotateX(4deg);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+    .bottle3d::after{content:"";position:absolute;inset:0;background:url('bottle.png') center/contain no-repeat;opacity:.9;transform:translateZ(50px)}
+    .bottle3d .label{position:absolute;bottom:18px;left:18px;right:18px;color:#dcdcdc;font-size:.9rem;opacity:.85}
+
+    /* Modal */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.86);display:none;align-items:center;justify-content:center;z-index:50;padding:24px}
+    .modal-card{width:min(920px,92vw);background:#0f0f0f;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 30px 120px rgba(0,0,0,.7);position:relative}
+    .modal-media{width:100%;aspect-ratio:16/9;background:#000 center/contain no-repeat}
+    .modal-body{padding:22px}
+    .modal-title{font-family:'Playfair Display',serif;font-size:1.6rem;margin-bottom:.4rem}
+    .modal-desc{color:#cfcfcf;line-height:1.75}
+    .modal-invite{margin-top:18px;padding:14px;border:1px solid rgba(212,175,55,.35);border-radius:12px;background:linear-gradient(180deg,rgba(212,175,55,.10),rgba(212,175,55,.04))}
+    .modal-invite strong{color:#f2e7b9}
+    .close{position:absolute;top:10px;right:14px;font-size:2rem;line-height:1;color:#fff;background:none;border:none;cursor:pointer}
+
+    footer{background:#000;padding:60px 10%;text-align:center;border-top:1px solid var(--line);color:#9a9a9a}
+
+    @media(max-width:640px){
+      nav{padding:12px 18px}.menu{display:none}
+      .hero h1{font-size:2.4rem}section{padding:100px 6%}
+    }
+  </style>
+</head>
+<body>
+  <!-- Background video -->
+  <div class="video-container">
+    <video autoplay muted loop playsinline webkit-playsinline preload="auto" id="bgVideo">
+      <source src="ad video.mp4" type="video/mp4"/>
+    </video>
+  </div>
+  <div class="overlay"></div>
+
+  <!-- Navbar -->
+  <nav id="navbar">
+    <div class="brand">Moët & Chandon</div>
+    <div class="menu">
+      <a href="#nature" data-i18n="nav.nature">NATURE</a>
+      <a href="#savoir" data-i18n="nav.savoir">SAVOIR-FAIRE</a>
+      <a href="#collection" data-i18n="nav.collection">COLLECTION</a>
+      <a href="#contact" data-i18n="nav.contact">CONTACT</a>
+    </div>
+    <div class="lang">
+      <select id="langSelect" aria-label="Language">
+        <option value="fr">FR</option>
+        <option value="en">EN</option>
+        <option value="it">IT</option>
+      </select>
+    </div>
+  </nav>
+
+   <!-- HERO -->
+  <header class="hero" data-lang="hero">
+    <h1>The Art of Celebration</h1>
+    <p>An immersive experience centered on nature and craftsmanship — from vineyard to gesture, from light to emotion.</p>
+  </header>
+
+  <div class="divider"></div>
+
+  <!-- NATURE -->
+  <section id="nature" data-lang="nature">
+    <h2>Nature & Terroir</h2>
+    <p>In Champagne, seasons set the rhythm. Chalk soils, microclimates and biodiversity shape the fruit’s identity.</p>
+
+    <div class="gallery">
+      <figure data-key="vineyard" style="background-image:url('vineyard-1.jpg')"><figcaption>Vineyards at Dawn</figcaption></figure>
+      <figure data-key="chalk" style="background-image:url('soil-chalk.jpg')"><figcaption>Chalk & Roots</figcaption></figure>
+      <figure data-key="biodiversity" style="background-image:url('biodiversity.jpg')"><figcaption>Biodiversity & Balance</figcaption></figure>
+      <figure data-key="harvest" style="background-image:url('harvest.jpg')"><figcaption>Harvest Tradition</figcaption></figure>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SAVOIR-FAIRE -->
+  <section id="savoir" data-lang="savoir">
+    <h2>Savoir-Faire</h2>
+    <p>The art of Champagne requires precision, patience and mastery — from pressing to blending, each step adds to the final signature.</p>
+
+    <div class="gallery">
+      <figure data-key="pressing" style="background-image:url('pressing.jpg')"><figcaption>Pressing & Purity</figcaption></figure>
+      <figure data-key="fermentation" style="background-image:url('fermentation.jpg')"><figcaption>Fermentation & Depth</figcaption></figure>
+      <figure data-key="blending" style="background-image:url('blending.jpg')"><figcaption>Blending & Harmony</figcaption></figure>
+    </div>
+  </section>
+
+   <!-- 3D BOTTLE SCROLL -->
+  <section class="scene" id="signature">
+    <div class="bottle3d" data-key="heritage">
+      <div class="label">Signature Bottle — Subtle Rotation on Scroll</div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- COLLECTION -->
+  <section id="collection" data-lang="collection">
+    <h2>The Collection</h2>
+    <p>Each cuvée is a story — Impérial for celebration, Rosé for emotion, and Grand Vintage for timeless sophistication.</p>
+
+    <div class="gallery">
+      <figure data-key="imperial" style="background-image:url('imperial.jpg')"><figcaption>Moët Impérial</figcaption></figure>
+      <figure data-key="rose" style="background-image:url('Rose.jpg')"><figcaption>Rosé Impérial</figcaption></figure>
+      <figure data-key="vintage" style="background-image:url('vintage.jpg')"><figcaption>Grand Vintage</figcaption></figure>
+    </div>
+  </section>
+
+  <footer id="contact" data-lang="footer">
+    Moët & Chandon © 2025 — LVMH Group · Elegance & Mastery
+  </footer>
+
+  <!-- MODAL -->
+  <div class="modal" id="modal">
+    <button class="close-btn" id="closeModal">&times;</button>
+    <div class="modal-content" id="modalBody">
+      <div class="modal-flex">
+        <img id="modalImg" src="" alt="" class="modal-thumb">
+        <div>
+          <h3 id="modalTitle"></h3>
+          <p id="modalDesc"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* MODAL IMPROVEMENTS */
+    .modal {
+      position:fixed; inset:0;
+      display:none; justify-content:center; align-items:center;
+      background:rgba(0,0,0,0.8);
+      z-index:20;
+    }
+    .modal-content {
+      background:#111;
+      padding:30px;
+      border-radius:12px;
+      max-width:640px;
+      color:#ddd;
+      text-align:left;
+      box-shadow:0 10px 50px rgba(0,0,0,0.6);
+      animation:fadeIn .4s ease;
+    }
+    .modal-flex {
+      display:flex;
+      align-items:flex-start;
+      gap:20px;
+    }
+    .modal-thumb {
+      width:180px;
+      height:auto;
+      border-radius:10px;
+      object-fit:contain;
+      flex-shrink:0;
+    }
+    .modal-content h3 {
+      font-family:'Playfair Display',serif;
+      margin-bottom:10px;
+      font-size:1.6rem;
+      color:#fff;
+    }
+    .close-btn {
+      position:absolute;
+      top:20px;
+      right:30px;
+      font-size:1.8rem;
+      color:#fff;
+      cursor:pointer;
+      background:none;
+      border:none;
+    }
+  </style>
+
+  <<script>
+  gsap.registerPlugin(ScrollTrigger);
+
+  /* Fade-ins */
+  gsap.utils.toArray("section h2, section p").forEach(el=>{
+    gsap.to(el,{
+      opacity:1,y:0,duration:1.2,ease:"power2.out",
+      scrollTrigger:{trigger:el,start:"top 85%"}
+    });
+  });
+
+  /* 3D bottle scroll */
+  gsap.to(".bottle3d",{
+    rotateY:18,rotateX:-4,scrub:true,
+    scrollTrigger:{trigger:".bottle3d",start:"top 80%",end:"bottom top",scrub:true}
+  });
+
+  /* Navbar fade */
+  const navbar=document.getElementById("navbar");
+  window.addEventListener("scroll",()=>navbar.classList.toggle("scrolled",window.scrollY>50));
+
+  /* --- Modal Logic --- */
+  const modal=document.getElementById("modal");
+  const modalImg=document.getElementById("modalImg");
+  const modalTitle=document.getElementById("modalTitle");
+  const modalDesc=document.getElementById("modalDesc");
+  document.getElementById("closeModal").onclick=()=>modal.style.display="none";
+  modal.onclick=e=>{if(e.target===modal)modal.style.display="none";};
+
+  /* --- Translation Dictionary --- */
+  const content={
+    en:{
+      nav:{nature:"NATURE",savoir:"SAVOIR-FAIRE",collection:"COLLECTION",contact:"CONTACT"},
+      imperial:{t:"Moët Impérial",d:"The iconic expression of the House — bright, generous and elegant."},
+      rose:{t:"Rosé Impérial",d:"A radiant rosé celebrating Pinot Noir’s intensity."},
+      vintage:{t:"Grand Vintage",d:"Created only in exceptional years, reflecting a single harvest."},
+      hero_h1:"The Art of Celebration",
+      hero_p:"An immersive experience centered on nature and craftsmanship — from vineyard to gesture, from light to emotion.",
+      collection_h2:"The Collection",
+      collection_p:"Each cuvée is a story — Impérial for celebration, Rosé for emotion, and Grand Vintage for timeless sophistication.",
+      footer:"Moët & Chandon © 2025 — LVMH Group · Elegance & Mastery"
+    },
+    fr:{
+      nav:{nature:"NATURE",savoir:"SAVOIR-FAIRE",collection:"COLLECTION",contact:"CONTACT"},
+      imperial:{t:"Moët Impérial",d:"L’expression iconique de la Maison — brillante, généreuse et élégante."},
+      rose:{t:"Rosé Impérial",d:"Un rosé radieux célébrant l’intensité du Pinot Noir."},
+      vintage:{t:"Grand Vintage",d:"Créé uniquement les années d’exception, reflet pur d’une récolte unique."},
+      hero_h1:"L’Art de la Célébration",
+      hero_p:"Une expérience immersive centrée sur la nature et le savoir-faire — de la vigne au geste, de la lumière à l’émotion.",
+      collection_h2:"La Collection",
+      collection_p:"Chaque cuvée raconte une histoire — Impérial pour la fête, Rosé pour l’émotion, et Grand Vintage pour l’intemporalité.",
+      footer:"Moët & Chandon © 2025 — Groupe LVMH · Élégance et Maîtrise"
+    },
+    it:{
+      nav:{nature:"NATURA",savoir:"SAVOIR-FAIRE",collection:"COLLEZIONE",contact:"CONTATTO"},
+      imperial:{t:"Moët Impérial",d:"L’espressione iconica della Maison — brillante, generosa ed elegante."},
+      rose:{t:"Rosé Impérial",d:"Un rosé radioso che celebra l’intensità del Pinot Noir."},
+      vintage:{t:"Grand Vintage",d:"Creato solo negli anni eccezionali, riflette un’unica vendemmia."},
+      hero_h1:"L’Arte della Celebrazione",
+      hero_p:"Un’esperienza immersiva centrata sulla natura e sull’artigianalità — dalla vigna al gesto, dalla luce all’emozione.",
+      collection_h2:"La Collezione",
+      collection_p:"Ogni cuvée racconta una storia — Impérial per la celebrazione, Rosé per l’emozione e Grand Vintage per la raffinatezza.",
+      footer:"Moët & Chandon © 2025 — Gruppo LVMH · Eleganza e Maestria"
+    }
+  };
+
+  /* click -> modal */
+  document.querySelectorAll("#collection figure").forEach(fig=>{
+    fig.addEventListener("click",()=>{
+      const key=fig.dataset.key;
+      const lang=currentLang;
+      const item=content[lang][key];
+      modalTitle.textContent=item.t;
+      modalDesc.textContent=item.d;
+      modalImg.src=fig.style.backgroundImage.slice(5,-2);
+      modal.style.display="flex";
+    });
+  });
+
+  /* --- Language switch --- */
+  let currentLang="fr";
+  const langSel=document.getElementById("langSelect");
+
+  langSel.addEventListener("change",e=>{
+    currentLang=e.target.value;
+    applyLang(currentLang);
+  });
+
+  function applyLang(l){
+    const t=content[l];
+    // HERO
+    document.querySelector('[data-lang="hero"] h1').textContent=t.hero_h1;
+    document.querySelector('[data-lang="hero"] p').textContent=t.hero_p;
+    // NAV
+    document.querySelector('[data-i18n="nav.nature"]').textContent=t.nav.nature;
+    document.querySelector('[data-i18n="nav.savoir"]').textContent=t.nav.savoir;
+    document.querySelector('[data-i18n="nav.collection"]').textContent=t.nav.collection;
+    document.querySelector('[data-i18n="nav.contact"]').textContent=t.nav.contact;
+    // COLLECTION
+    document.querySelector('[data-lang="collection"] h2').textContent=t.collection_h2;
+    document.querySelector('[data-lang="collection"] p').textContent=t.collection_p;
+    // FOOTER
+    document.querySelector('[data-lang="footer"]').textContent=t.footer;
+  }
+
+  // Init default language at load
+  applyLang(currentLang);
+</script>
+
